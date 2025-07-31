@@ -110,7 +110,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 		foreach($_POST['updates'] as $update) {
 			$json->actions[] = json_decode($update);
 		}
-		if(($active_user->admin || $active_user->access_to($zone) == 'administrator') && !$force_change_review) {
+		if(($active_user->admin || $active_user->access_to($zone) == 'administrator' || $active_user->is_zone_superadmin($zone)) && !$force_change_review) {
 			try {
 				$zone->process_bulk_json_rrset_update(json_encode($json));
 				redirect();
@@ -128,10 +128,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 		} else {
 			$zone->add_pending_update(json_encode($json));
 			$mail = new Email;
-			// Mail SOA contact and administrators about pending update
+			// Mail SOA contact and administrators/superadministrators about pending update
 			$mail->add_recipient(preg_replace('/^([^\.]+)\./', '$1@', trim($zone->soa->contact, '.')));
 			foreach($zone->list_access() as $access) {
-				if($access->level == 'administrator') {
+				if($access->level == 'administrator' || $access->level == 'superadministrator') {
 					$mail->add_recipient($access->user->email, $access->user->name);
 				}
 			}
@@ -158,7 +158,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 			$zone->delete_pending_update($update);
 		}
 		redirect();
-	} elseif(isset($_POST['approve_update']) && ($active_user->admin || $active_user->access_to($zone) == 'administrator')) {
+	} elseif(isset($_POST['approve_update']) && ($active_user->admin || $active_user->access_to($zone) == 'administrator' || $active_user->is_zone_superadmin($zone))) {
 		try {
 			$update = $zone->get_pending_update_by_id($_POST['approve_update']);
 		} catch(PendingUpdateNotFound $e) {
@@ -189,7 +189,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 			$content = new PageSection('zone_update_failed');
 			$content->set('message', $e->getMessage());
 		}
-	} elseif(isset($_POST['reject_update']) && ($active_user->admin || $active_user->access_to($zone) == 'administrator')) {
+	} elseif(isset($_POST['reject_update']) && ($active_user->admin || $active_user->access_to($zone) == 'administrator' || $active_user->is_zone_superadmin($zone))) {
 		try {
 			$update = $zone->get_pending_update_by_id($_POST['reject_update']);
 		} catch(PendingUpdateNotFound $e) {
@@ -213,7 +213,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 		$alert->content = "Change request rejected.";
 		$active_user->add_alert($alert);
 		redirect();
-	} elseif(isset($_POST['update_zone']) && ($active_user->admin || $active_user->access_to($zone) == 'administrator')) {
+	} elseif(isset($_POST['update_zone']) && ($active_user->admin || $active_user->access_to($zone) == 'administrator' || $active_user->is_zone_superadmin($zone))) {
 		$zone->kind = $_POST['kind'];
 		$zone->account = $_POST['classification'];
 		$zone->update();

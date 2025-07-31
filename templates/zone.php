@@ -86,7 +86,7 @@ global $output_formatter;
 					$rrsetnum = 0;
 					foreach($rrsets as $rrset) {
 						if($rrset->type == 'SOA') continue;
-						if($rrset->type == 'NS' && !$active_user->admin) continue;
+						if($rrset->type == 'NS' && !($active_user->admin || $active_user->is_zone_superadmin($zone))) continue;
 						$rrsetnum++;
 						$rrs = $rrset->list_resource_records();
 						$name = DNSName::abbreviate($rrset->name, $zone->name);
@@ -164,7 +164,7 @@ global $output_formatter;
 								<?php if($reverse) { ?>
 								<option value="CNAME" data-content-pattern="\S+">CNAME</option>
 								<option value="DS" data-content-pattern="[0-9]+\s+[0-9]+\s+[0-9]+\s+[a-zA-Z0-9]+">DS</option>
-								<?php if($active_user->admin) { ?>
+								<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 								<option value="NS" data-content-pattern="\S*">NS</option>
 								<?php } ?>
 								<option value="PTR" data-content-pattern="\S+">PTR</option>
@@ -180,7 +180,7 @@ global $output_formatter;
 								<option value="DNSKEY" data-content-pattern="[0-9]+\s+[0-9]+\s+[0-9]+\s+.+">DNSKEY</option>
 								<option value="DS" data-content-pattern="[0-9]+\s+[0-9]+\s+[0-9]+\s+[a-zA-Z0-9]+">DS</option>
 								<option value="NAPTR" data-content-pattern="[0-9]+\s+[0-9]+\s+&quot;[a-zA-Z0-9]+&quot;\s*&quot;[^&quot;]*&quot;\s+&quot;[^&quot;]*&quot;\s+\S+">NAPTR</option>
-								<?php if($active_user->admin) { ?>
+								<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 								<option value="NS" data-content-pattern="\S*">NS</option>
 								<?php } ?>
 								<option value="LOC" data-content-pattern="[0-9]{1,2} ([0-9]{1,3} ([0-9]{1,2}(\.[0-9]{1,3})?)?)? [NS] [0-9]{1,2} ([0-9]{1,3} ([0-9]{1,2}(\.[0-9]{1,3})?)?)? [EW] -?[0-9]+(\.[0-9]{1,2})?m?( [0-9]+(\.[0-9]{1,2})?m?( [0-9]+(\.[0-9]{1,2})?m?( [0-9]+(\.[0-9]{1,2})?m?)))">LOC</option>
@@ -219,9 +219,10 @@ global $output_formatter;
 				<ul id="collisions_list">
 				</ul>
 				<input type="hidden" name="serial" value="<?php out($zone->soa->serial)?>">
-				<div class="form-group"><label for="comment">Update comment</label><input type="text" id="comment" name="comment" class="form-control"<?php if($force_change_comment) out(' required');?>></div>
+				<div class="form-group"><label for="comment">Update comment</label><input type="text" id="comment" name="comment" class="form-control"<?php if($force_change_comment) out(' required');?>>
+				</div>
 				<div id="errors"></div>
-				<?php if(($active_user->admin || $active_user->access_to($zone) == 'administrator') && !$force_change_review) { ?>
+				<?php if(($active_user->admin || $active_user->access_to($zone) == 'administrator' || $active_user->is_zone_superadmin($zone)) && !$force_change_review) { ?>
 				<p><button type="submit" id="zonesubmit" name="update_rrs" value="save" class="btn btn-primary">Save changes</button></p>
 				<?php } else { ?>
 				<p><button type="submit" id="zonesubmit" name="update_rrs" value="request" class="btn btn-primary">Request changes</button></p>
@@ -259,7 +260,7 @@ global $output_formatter;
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<div class="pull-right">
-						<?php if($active_user->admin || $active_user->access_to($zone) == 'administrator') { ?>
+						<?php if($active_user->admin || $active_user->access_to($zone) == 'administrator' || $active_user->is_zone_superadmin($zone)) { ?>
 						<?php if($invalid_count == 0) { ?>
 						<button type="submit" name="approve_update" value="<?php out($update->id)?>" class="btn btn-xs btn-success"><span class="glyphicon glyphicon-ok"></span> Approve</button>
 						<?php } else { ?>
@@ -367,7 +368,7 @@ global $output_formatter;
 			<div class="form-group">
 				<label for="kind" class="col-sm-2 control-label">Replication type</label>
 				<div class="col-sm-10">
-					<?php if($active_user->admin) { ?>
+					<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 					<select id="kind" name="kind" class="form-control" required>
 						<?php foreach($replication_types as $type) { ?>
 						<option value="<?php out($type->name)?>"<?php if($zone->kind == $type->name) out(' selected')?>><?php out($type->name)?></option>
@@ -381,7 +382,7 @@ global $output_formatter;
 			<div class="form-group">
 				<label for="classification" class="col-sm-2 control-label">Classification</label>
 				<div class="col-sm-10">
-					<?php if($active_user->admin) { ?>
+					<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 					<?php if($force_account_whitelist) { ?>
 					<select class="form-control" id="classification" name="classification">
 						<?php foreach($account_whitelist as $account) { ?>
@@ -405,7 +406,7 @@ global $output_formatter;
 				</div>
 			</div>
 			<h3>Start of authority (SOA)</h3>
-			<?php if($active_user->admin) { ?>
+			<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 			<div class="form-group">
 				<label class="col-sm-2 control-label">SOA templates</label>
 				<div class="col-sm-10">
@@ -419,7 +420,7 @@ global $output_formatter;
 			<div class="form-group">
 				<label for="primary_ns" class="col-sm-2 control-label">Primary nameserver</label>
 				<div class="col-sm-10">
-					<?php if($active_user->admin) { ?>
+					<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 					<input type="text" class="form-control" id="primary_ns" name="primary_ns" required pattern="\S+" value="<?php out($zone->soa->primary_ns)?>">
 					<?php } else { ?>
 					<p class="form-control-static"><?php out($zone->soa->primary_ns)?></p>
@@ -429,7 +430,7 @@ global $output_formatter;
 			<div class="form-group">
 				<label for="contact" class="col-sm-2 control-label">Contact</label>
 				<div class="col-sm-10">
-					<?php if($active_user->admin) { ?>
+					<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 					<input type="text" class="form-control" id="contact" name="contact" required pattern="\S+" value="<?php out($zone->soa->contact)?>">
 					<?php } else { ?>
 					<p class="form-control-static"><?php out($zone->soa->contact)?></p>
@@ -445,7 +446,7 @@ global $output_formatter;
 			<div class="form-group">
 				<label for="refresh" class="col-sm-2 control-label"><abbr title="Indicates the time when the slave will try to refresh the zone from the master">Refresh</abbr></label>
 				<div class="col-sm-10">
-					<?php if($active_user->admin) { ?>
+					<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 					<input type="text" class="form-control" id="refresh" name="refresh" required pattern="([0-9]+[smhdwSMHDW]?)+" maxlength="40" value="<?php out(DNSTime::abbreviate($zone->soa->refresh))?>">
 					<?php } else { ?>
 					<p class="form-control-static"><?php out(DNSTime::abbreviate($zone->soa->refresh))?></p>
@@ -455,7 +456,7 @@ global $output_formatter;
 			<div class="form-group">
 				<label for="retry" class="col-sm-2 control-label"><abbr title="Defines the time between retries if the slave (secondary) fails to contact the master when refresh (above) has expired. Typical values would be 180 (3 minutes) to 900 (15 minutes) or higher.">Retry</abbr></label>
 				<div class="col-sm-10">
-					<?php if($active_user->admin) { ?>
+					<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 					<input type="text" class="form-control" id="retry" name="retry" required pattern="([0-9]+[smhdwSMHDW]?)+" maxlength="40" value="<?php out(DNSTime::abbreviate($zone->soa->retry))?>">
 					<?php } else { ?>
 					<p class="form-control-static"><?php out(DNSTime::abbreviate($zone->soa->retry))?></p>
@@ -465,7 +466,7 @@ global $output_formatter;
 			<div class="form-group">
 				<label for="expire" class="col-sm-2 control-label"><abbr title="Indicates when the zone data is no longer authoritative. Used by Slave (Secondary) servers only.">Expire</abbr></label>
 				<div class="col-sm-10">
-					<?php if($active_user->admin) { ?>
+					<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 					<input type="text" class="form-control" id="expire" name="expire" required pattern="([0-9]+[smhdwSMHDW]?)+" maxlength="40" value="<?php out(DNSTime::abbreviate($zone->soa->expiry))?>">
 					<?php } else { ?>
 					<p class="form-control-static"><?php out(DNSTime::abbreviate($zone->soa->expiry))?></p>
@@ -475,7 +476,7 @@ global $output_formatter;
 			<div class="form-group">
 				<label for="default_ttl" class="col-sm-2 control-label"><abbr title="The time a NAME ERROR = NXDOMAIN result may be cached by any resolver.">Default TTL</abbr></label>
 				<div class="col-sm-10">
-					<?php if($active_user->admin) { ?>
+					<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 					<input type="text" class="form-control" id="default_ttl" name="default_ttl" required pattern="([0-9]+[smhdwSMHDW]?)+" maxlength="40" value="<?php out(DNSTime::abbreviate($zone->soa->default_ttl))?>">
 					<?php } else { ?>
 					<p class="form-control-static"><?php out(DNSTime::abbreviate($zone->soa->default_ttl))?></p>
@@ -485,7 +486,7 @@ global $output_formatter;
 			<div class="form-group">
 				<label for="soa_ttl" class="col-sm-2 control-label"><abbr title="The time this SOA record may be cached by any resolver.">SOA TTL</abbr></label>
 				<div class="col-sm-10">
-					<?php if($active_user->admin) { ?>
+					<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 					<input type="text" class="form-control" id="soa_ttl" name="soa_ttl" required pattern="([0-9]+[smhdwSMHDW]?)+" maxlength="40" value="<?php out(DNSTime::abbreviate($zone->soa->ttl))?>">
 					<?php } else { ?>
 					<p class="form-control-static"><?php out(DNSTime::abbreviate($zone->soa->ttl))?></p>
@@ -493,7 +494,7 @@ global $output_formatter;
 				</div>
 			</div>
 			<hr>
-			<?php if($active_user->admin) { ?>
+			<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 			<div class="form-group">
 				<label for="soa_change_comment" class="col-sm-2 control-label">Change comment</label>
 				<div class="col-sm-10">
@@ -783,6 +784,12 @@ global $output_formatter;
 			<div class="form-group">
 				<label class="col-sm-2 control-label">Access level</label>
 				<div class="col-sm-6">
+					<div class="radio">
+						<label>
+							<input type="radio" name="level" value="superadministrator">
+							Zone Superadmin&mdash;can directly edit any records in the zone including SOA and NS records
+						</label>
+					</div>
 					<div class="radio">
 						<label>
 							<input type="radio" name="level" value="administrator" checked>
