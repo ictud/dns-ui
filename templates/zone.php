@@ -87,6 +87,7 @@ global $output_formatter;
 					foreach($rrsets as $rrset) {
 						if($rrset->type == 'SOA') continue;
 						if($rrset->type == 'NS' && !($active_user->admin || $active_user->is_zone_superadmin($zone))) continue;
+						if($rrset->type == 'CAA' && !($active_user->admin || $active_user->is_zone_superadmin($zone))) continue;
 						$rrsetnum++;
 						$rrs = $rrset->list_resource_records();
 						$name = DNSName::abbreviate($rrset->name, $zone->name);
@@ -172,7 +173,9 @@ global $output_formatter;
 								<option value="A" data-content-pattern="((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])">A</option>
 								<option value="AAAA" data-content-pattern="(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))">AAAA</option>
 								<option value="ALIAS" data-content-pattern="\S+">ALIAS</option>
+								<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
 								<option value="CAA" data-content-pattern="[0-9]+\s+\S+\s+\S+">CAA</option>
+								<?php } ?>
 								<option value="CNAME" data-content-pattern="\S+">CNAME</option>
 								<!-- DHCID regex contributed under CC BY-SA 4.0 by njzk2 (https://stackoverflow.com/users/671543/njzk2) on Stack Overflow: https://stackoverflow.com/a/5885097 -->
 								<option value="DHCID" data-content-pattern="^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{4})$">DHCID</option>
@@ -818,3 +821,4 @@ global $output_formatter;
 		<?php } ?>
 	</div>
 </div>
+
