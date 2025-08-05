@@ -771,7 +771,21 @@ global $output_formatter;
 					<?php foreach($access as $rule) { ?>
 					<tr>
 						<td><?php out($rule->user->name)?></td>
-						<td><?php out(ucfirst($rule->level))?></td>
+						<td><?php 
+							switch($rule->level) {
+								case 'zone-super-administrator':
+									echo 'Zone Super Administrator';
+									break;
+								case 'administrator':
+									echo 'Administrator';
+									break;
+								case 'operator':
+									echo 'Operator';
+									break;
+								default:
+									echo ucfirst($rule->level);
+							}
+						?></td>
 						<?php if($active_user->admin) { ?>
 						<td><button type="submit" name="delete_access" value="<?php out($rule->user->uid)?>" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-trash"></span> Remove</button></td>
 						<?php } ?>
