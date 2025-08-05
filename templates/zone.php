@@ -66,7 +66,7 @@ global $output_formatter;
 <div class="tab-content">
 	<div role="tabpanel" class="tab-pane active" id="records">
 		<h2 class="sr-only">Resource records</h2>
-		<form method="post" action="<?php outurl('/zones/'.urlencode(DNSZoneName::unqualify($zone->name)))?>" class="zoneedit" data-zone="<?php out($zone->name)?>" data-local-zone="<?php out($local_zone ? 1 : 0)?>" data-local-ipv4-ranges="<?php out($local_ipv4_ranges)?>" data-local-ipv6-ranges="<?php out($local_ipv6_ranges)?>">
+		<form method="post" action="<?php outurl('/zones/'.urlencode(DNSZoneName::unqualify($zone->name)))?>" class="zoneedit" data-zone="<?php out($zone->name)?>" data-local-zone="<?php out($local_zone ? 1 : 0)?>" data-local-ipv4-ranges="<?php out($local_ipv4_ranges)?>" data-local-ipv6-ranges="<?php out($local_ipv6_ranges)?>" data-user-admin="<?php out($active_user->admin ? 1 : 0)?>" data-user-superadmin="<?php out($active_user->is_zone_superadmin($zone) ? 1 : 0)?>">
 			<?php out($this->get('active_user')->get_csrf_field(), ESC_NONE) ?>
 			<nav></nav>
 			<table class="table table-bordered table-condensed table-hover stickyHeader rrsets">
@@ -86,8 +86,6 @@ global $output_formatter;
 					$rrsetnum = 0;
 					foreach($rrsets as $rrset) {
 						if($rrset->type == 'SOA') continue;
-						if($rrset->type == 'NS' && !($active_user->admin || $active_user->is_zone_superadmin($zone))) continue;
-						if($rrset->type == 'CAA' && !($active_user->admin || $active_user->is_zone_superadmin($zone))) continue;
 						$rrsetnum++;
 						$rrs = $rrset->list_resource_records();
 						$name = DNSName::abbreviate($rrset->name, $zone->name);
@@ -101,7 +99,7 @@ global $output_formatter;
 						if($alldisabled) $rowclasses[] = 'rrset-disable';
 						if($rrsetnum > $maxperpage) $rowclasses[] = 'hidden';
 						?>
-					<tr data-name="<?php out(punycode_to_utf8($name))?>" data-type="<?php out($rrset->type)?>" data-rrsetnum="<?php out($rrsetnum)?>" class="<?php out(implode(' ', $rowclasses))?>">
+					<tr data-name="<?php out(punycode_to_utf8($name))?>" data-type="<?php out($rrset->type)?>" data-rrsetnum="<?php out($rrsetnum)?>" class="<?php out(implode(' ', $rowclasses))?><?php if(($rrset->type == 'NS' || $rrset->type == 'CAA') && !($active_user->admin || $active_user->is_zone_superadmin($zone))) echo ' read-only'; ?>">
 						<td class="name" rowspan="<?php out(count($rrs))?>"><?php out(punycode_to_utf8($name))?></td>
 						<td class="type" rowspan="<?php out(count($rrs))?>"><?php out($rrset->type)?></td>
 						<td class="ttl" rowspan="<?php out(count($rrs))?>"><?php out(DNSTime::abbreviate($rrset->ttl))?></td>
@@ -140,7 +138,15 @@ global $output_formatter;
 						?></td>
 						<td class="enabled"><?php out($rr->disabled ? 'No' : 'Yes')?></td>
 						<td class="actions">
-							<button type="button" class="btn btn-default btn-xs delete-rr"><span class="glyphicon glyphicon-trash"></span> Delete</button>
+							<?php if($rrset->type == 'NS' || $rrset->type == 'CAA') { ?>
+								<?php if($active_user->admin || $active_user->is_zone_superadmin($zone)) { ?>
+									<button type="button" class="btn btn-default btn-xs delete-rr"><span class="glyphicon glyphicon-trash"></span> Delete</button>
+								<?php } else { ?>
+									<span class="text-muted">Read-only</span>
+								<?php } ?>
+							<?php } else { ?>
+								<button type="button" class="btn btn-default btn-xs delete-rr"><span class="glyphicon glyphicon-trash"></span> Delete</button>
+							<?php } ?>
 						</td>
 						<?php if($count == 1) { ?>
 						<td class="comment" rowspan="<?php out(count($rrs))?>"><?php out($rrset->merge_comment_text())?></td>
