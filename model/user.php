@@ -196,12 +196,12 @@ class User extends Record {
 	}
 
 	/**
-	* Check if this user is a zone superadministrator for the specified zone.
-	* @param Zone $zone to check for superadmin access
-	* @return bool true if user is zone superadministrator
+	* Check if this user is a zone super administrator for the specified zone.
+	* @param Zone $zone to check for super administrator access
+	* @return bool true if user is zone super administrator
 	*/
-	public function is_zone_superadmin(Zone $zone) {
-		return $this->access_to($zone) === 'superadministrator';
+	public function is_zone_super_administrator(Zone $zone) {
+		return $this->access_to($zone) === 'zone-super-administrator';
 	}
 
 	/**

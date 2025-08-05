@@ -781,7 +781,7 @@ class Zone extends Record {
 			$update->oldname = $update->name;
 			$update->oldtype = $update->type;
 		}
-		if(($update->type == 'SOA' || $update->type == 'NS' || $update->type == 'CAA') && !($active_user->admin || $active_user->is_zone_superadmin($this))) return;
+		if(($update->type == 'SOA' || $update->type == 'NS' || $update->type == 'CAA') && !($active_user->admin || $active_user->is_zone_super_administrator($this))) return;
 
 		if(isset($config['dns']['autocreate_reverse_records'])) {
 			$autocreate_ptr = (bool)$config['dns']['autocreate_reverse_records'];
