@@ -122,7 +122,7 @@ $(function() {
 			var tr = element.closest('tr');
 			var recordType = tr.data('type');
 			var userAdmin = form.data('user-admin') == 1;
-			var userSuperadmin = form.data('user-superadmin') == 1;
+			var userSuperadmin = form.data('user-super-zone-admin') == 1;
 			
 			// NS and CAA records can only be edited by admins or super zone admins
 			if((recordType == 'NS' || recordType == 'CAA') && !(userAdmin || userSuperadmin)) {
